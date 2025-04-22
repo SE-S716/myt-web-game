@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>复兴之路 · 完整版</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f1c40f;
+        }
+        body {
+            font-family: '微软雅黑', sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .era-section {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        .active-era {
+            display: block;
+        }
+        .city-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--primary-color);
+        }
+        .crisis-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .crisis-item {
+            padding: 12px;
+            background: #fff9e6;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+        }
+        .decision-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .decision-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .decision-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .resource-bar {
+            height: 20px;
+            background: #eee;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .resource-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+        .timer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #final-result {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="timer" id="timer">剩余时间: <span id="timeLeft">30</span>秒</div>
+    <h1 style="color: var(--primary-color); text-align: center;">复兴之路</h1>
+
+    <!-- 第一纪元 1949 -->
+    <div id="era1949" class="era-section active-era">
+        <div class="city-card">
+            <h2>1949年 · 复兴城</h2>
+            <div class="crisis-list">
+                <div class="crisis-item">
+                    <span>💸</span>1袋米=100捆钞票
+                </div>
+                <div class="crisis-item">
+                    <span>👥</span>商人囤货抬价
+                </div>
+                <div class="crisis-item">
+                    <span>🌾</span>粮仓即将见底
+                </div>
+                <div class="crisis-item">
+                    <span>🌍</span>外国全面封锁
+                </div>
+            </div>
+            <div class="resource-bar">
+                <div id="resourceBar1949" class="resource-fill" style="width:100%;background:var(--primary-color)"></div>
+            </div>
+        </div>
+        <div class="decision-container" id="decisions1949"></div>
+    </div>
+
+    <!-- 第二纪元 2025 -->
+    <div id="era2025" class="era-section">
+        <div class="city-card">
+            <h2 id="currentStatusTitle">2025年 · 复兴城</h2>
+            <div class="crisis-list" id="statusBadges"></div>
+            <div class="resource-bar">
+                <div id="resourceBar2025" class="resource-fill" style="width:100%;background:var(--primary-color)"></div>
+            </div>
+        </div>
+        <div class="decision-container" id="decisions2025"></div>
+    </div>
+
+    <div id="final-result"></div>
+
+    <script>
+        // 游戏配置
+        const decisionConfig = {
+            1949: {
+                options: [
+                    {
+                        key: 'A',
+                        title: '自己当家作主',
+                        color: 'var(--success-color)',
+                        items: ['抓捕投机奸商', '开设国营粮店', '发动群众宣传']
+                    },
+                    {
+                        key: 'B',
+                        title: '找老大哥帮忙',
+                        color: 'var(--warning-color)',
+                        items: ['使用外国货币', '移交海关管理权', '照搬计划经济']
+                    },
+                    {
+                        key: 'C',
+                        title: '打开国门求援',
+                        color: 'var(--danger-color)',
+                        items: ['允许外币流通', '引进外国资本', '取消粮食管制']
+                    }
+                ]
+            },
+            2025: {
+                options: [
+                    {
+                        key: 'A',
+                        title: '全民造芯运动',
+                        color: 'var(--success-color)',
+                        items: ['高校扩招理工生', '24小时研发攻关', '国产替代方案']
+                    },
+                    {
+                        key: 'B',
+                        title: '签城下之盟',
+                        color: 'var(--warning-color)',
+                        items: ['交出技术数据', '停止自主研发', '购买高价芯片']
+                    },
+                    {
+                        key: 'C',
+                        title: '找新朋友帮忙',
+                        color: 'var(--danger-color)',
+                        items: ['资源置换技术', '建立反霸联盟', '绕开美元结算']
+                    }
+                ]
+            }
+        };
+
+        // 游戏核心逻辑
+        let gameState = {
+            currentEra: 1949,
+            path: [],
+            resources: 100,
+            timeLeft: 30,
+            status: {
+                tech: 70,
+                autonomy: 80,
+                foreignControl: 20,
+                stability: 60
+            }
+        };
+
+        const eraEffects = {
+            '1949A': { tech: 15, autonomy: 20, foreignControl: -15, resourceCost: 30 },
+            '1949B': { tech: -20, autonomy: -40, foreignControl: 50, resourceCost: 20 },
+            '1949C': { tech: -40, autonomy: -60, foreignControl: 80, resourceCost: 15 },
+            '2025A': { tech: 30, autonomy: 25, foreignControl: -20, resourceCost: 40 },
+            '2025B': { tech: -25, autonomy: -40, foreignControl: 35, resourceCost: 25 },
+            '2025C': { tech: 15, autonomy: 10, foreignControl: 15, resourceCost: 35 }
+        };
+
+        let timerId;
+
+        // 初始化游戏
+        function initGame() {
+            generateDecisions(1949);
+            generateDecisions(2025);
+            startTimer();
+        }
+
+        // 生成随机选项
+        function generateDecisions(year) {
+            const container = document.getElementById(`decisions${year}`);
+            const options = [...decisionConfig[year].options];
+            
+            // 随机排序选项
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+
+            container.innerHTML = options.map(opt => `
+                <div class="decision-card" 
+                     style="border-color: ${opt.color}"
+                     onclick="handleChoice(${year}, '${opt.key}')">
+                    <h3 style="color: ${opt.color}">🎮 ${opt.title}</h3>
+                    <ul>${opt.items.map(item => `<li>${item}</li>`).join('')}</ul>
+                </div>
+            `).join('');
+        }
+
+        // 处理决策选择
+        function handleChoice(year, choice) {
+            if(gameState.resources <= 0) return;
+            
+            const effectKey = `${year}${choice}`;
+            if(!eraEffects[effectKey]) return;
+            
+            applyEffects(effectKey);
+            gameState.path.push(choice);
+
+            if(checkResourceLimit()) return;
+            
+            if(year === 1949) {
+                if(Math.random() < 0.4) triggerRandomEvent();
+                switchEra(2025);
+                startTimer();
+            } else {
+                showFinalResult();
+            }
+        }
+
+        // 应用决策效果
+        function applyEffects(key) {
+            const effects = eraEffects[key];
+            Object.keys(effects).forEach(k => {
+                if(k !== 'resourceCost') {
+                    gameState.status[k] = clamp(gameState.status[k] + effects[k]);
+                }
+            });
+            gameState.resources = clamp(gameState.resources - effects.resourceCost);
+            updateResourceDisplay();
+            updateStatusDisplay();
+        }
+
+        // 切换纪元
+        function switchEra(newEra) {
+            document.querySelectorAll('.era-section').forEach(era => {
+                era.classList.remove('active-era');
+            });
+            document.getElementById(`era${newEra}`).classList.add('active-era');
+            gameState.currentEra = newEra;
+            generateDecisions(newEra);
+        }
+
+        // 更新资源显示
+        function updateResourceDisplay() {
+            const barId = `resourceBar${gameState.currentEra}`;
+            const barElement = document.getElementById(barId);
+            if(barElement) {
+                barElement.style.width = gameState.resources + '%';
+            }
+        }
+
+        // 更新状态显示
+        function updateStatusDisplay() {
+            const statusMap = {
+                'A': ['🔋 科技突破', '👩🔧 人才储备', '🛡️ 抗压能力', '🌐 技术封锁'],
+                'B': ['🔌 技术依赖', '💸 外汇危机', '🤝 盟友关系', '⚠️ 数据风险'],
+                'C': ['🏗️ 外资控制', '📉 产业空心', '🌪️ 社会动荡', '💼 买办当权']
+            };
+            
+            const badges = statusMap[gameState.path[0]]?.map((text, i) => `
+                <div class="crisis-item">
+                    <span>${text}</span>
+                    <progress value="${Object.values(gameState.status)[i]}" max="100"></progress>
+                </div>
+            `).join('');
+
+            document.getElementById('statusBadges').innerHTML = badges;
+        }
+
+        // 触发随机事件
+        function triggerRandomEvent() {
+            const events = [
+                { msg: "🌧️ 自然灾害！资源减少15%", effect: () => gameState.resources -= 15 },
+                { msg: "💸 货币危机！外资控制增加20%", effect: () => gameState.status.foreignControl += 20 }
+            ];
+            const event = events[Math.floor(Math.random() * events.length)];
+            event.effect();
+            alert(event.msg);
+            updateResourceDisplay();
+        }
+
+        // 显示最终结果
+        function showFinalResult() {
+            const resultText = getFinalOutcome();
+            document.getElementById('final-result').innerHTML = `
+                <div class="city-card">
+                    <h3>🏁 最终结局（2049年）</h3>
+                    <p style="font-size:1.2em;color:var(--primary-color)">${resultText}</p>
+                    <div class="crisis-list">
+                        <div class="crisis-item">科技力：${gameState.status.tech}%</div>
+                        <div class="crisis-item">自主权：${gameState.status.autonomy}%</div>
+                        <div class="crisis-item">外资率：${gameState.status.foreignControl}%</div>
+                        <div class="crisis-item">稳定度：${gameState.status.stability}%</div>
+                    </div>
+                    <button onclick="location.reload()" style="margin-top:20px;padding:10px 20px;">
+                        再试一次 🔄
+                    </button>
+                </div>
+            `;
+        }
+
+        // 辅助函数
+        function clamp(value) {
+            return Math.max(0, Math.min(100, value));
+        }
+
+        function checkResourceLimit() {
+            if(gameState.resources <= 0) {
+                showFinalResult("⚠️ 资源耗尽！城市发展陷入停滞");
+                return true;
+            }
+            return false;
+        }
+
+        function startTimer() {
+            clearInterval(timerId);
+            gameState.timeLeft = 30;
+            document.getElementById('timeLeft').textContent = gameState.timeLeft;
+            
+            timerId = setInterval(() => {
+                gameState.timeLeft--;
+                document.getElementById('timeLeft').textContent = gameState.timeLeft;
+                
+                if(gameState.timeLeft <= 0) {
+                    autoDecision();
+                    clearInterval(timerId);
+                }
+            }, 1000);
+        }
+
+        function autoDecision() {
+            const choices = document.querySelectorAll(`#decisions${gameState.currentEra} .decision-card`);
+            if(choices.length > 0) {
+                const randomIndex = Math.floor(Math.random() * choices.length);
+                choices[randomIndex].click();
+            }
+        }
+
+        function getFinalOutcome() {
+            const path = gameState.path.join('');
+            const outcomes = {
+                'AA': '🚀 科技强国崛起',
+                'AB': '⚖️ 自主与依赖的平衡',
+                'AC': '🌐 新兴市场领导者',
+                'BA': '💥 转型失败危机',
+                'BB': '⚫ 彻底殖民化',
+                'BC': '🌪️ 双重制裁困境',
+                'CA': '⚔️ 主权争夺战',
+                'CB': '💸 资本游乐场',
+                'CC': '🕳️ 资源黑洞'
+            };
+            return outcomes[path] || '🌌 未知的发展道路...';
+        }
+
+        // 启动游戏
+        window.onload = initGame;
+    </script>
+</body>
+</html>
